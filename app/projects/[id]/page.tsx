@@ -32,34 +32,26 @@ export default function ProjectDashboard() {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold tracking-tight">项目仪表盘</h2>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              总翻译条目
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">总翻译条目</CardTitle>
             <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.translationCount}</div>
-            <p className="text-xs text-muted-foreground">
-              活跃翻译键值对
-            </p>
+            <p className="text-xs text-muted-foreground">活跃翻译键值对</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              语料库条目
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">语料库条目</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.corpusCount}</div>
-            <p className="text-xs text-muted-foreground">
-              语料库中的参考对
-            </p>
+            <p className="text-xs text-muted-foreground">语料库中的参考对</p>
           </CardContent>
         </Card>
       </div>

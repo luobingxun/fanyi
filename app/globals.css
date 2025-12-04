@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -38,10 +38,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --shadow: var(--shadow);
 }
 
 :root {
   --radius: 0.625rem;
+  --shadow: 0px 1px 2px 0px rgba(0, 21, 109, 0.05);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -115,5 +117,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #eff1f6;
   }
 }

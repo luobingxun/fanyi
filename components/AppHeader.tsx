@@ -11,14 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from './ui/dropdown-menu';
 
 export function AppHeader() {
   const { data: session } = useSession();
   const router = useRouter();
   const username = session?.user?.name || 'Guest';
-  
+
   // Generate avatar initials from username
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
@@ -33,7 +33,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-16 border-b bg-white flex items-center justify-between px-6 sticky top-0 z-40 shadow-sm">
+    <header className="h-16 border-b bg-white flex items-center justify-between px-6 sticky top-0 z-40 shadow">
       {/* Search Bar */}
       <div className="flex-1 max-w-xl">
         <div className="relative">
@@ -62,15 +62,17 @@ export function AppHeader() {
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-md cursor-pointer hover:shadow-lg transition-shadow">
                 {getInitials(username)}
               </div>
-              
+
               {/* User Name */}
               <div className="hidden md:block text-left">
-                <p className="text-sm font-semibold text-gray-900">{username}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {username}
+                </p>
                 <p className="text-xs text-gray-500">管理员</p>
               </div>
             </button>
           </DropdownMenuTrigger>
-          
+
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
@@ -80,17 +82,23 @@ export function AppHeader() {
                 </p>
               </div>
             </DropdownMenuLabel>
-            
+
             <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={handleChangePassword} className="cursor-pointer">
+
+            <DropdownMenuItem
+              onClick={handleChangePassword}
+              className="cursor-pointer"
+            >
               <KeyRound className="mr-2 h-4 w-4" />
               <span>修改密码</span>
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="cursor-pointer text-red-600 focus:text-red-600"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>退出登录</span>
             </DropdownMenuItem>
