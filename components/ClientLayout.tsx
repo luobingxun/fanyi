@@ -2,10 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
+import { useSidebar, SidebarProvider } from "@/hooks/useSidebar";
+import { cn } from "@/lib/utils";
 
-export function ClientLayout({ children }: { children: React.ReactNode }) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password';
+  const { isCollapsed } = useSidebar();
 
   if (isAuthPage) {
     return (
@@ -15,12 +19,28 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const marginClass = isCollapsed ? "ml-24" : "ml-[15rem]";
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar />
-      <main className="flex-1 ml-64 p-8">
-        {children}
-      </main>
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        marginClass
+      )}>
+        <AppHeader />
+        <main className="flex-1 p-8">
+          {children}
+        </main>
+      </div>
     </div>
+  );
+}
+
+export function ClientLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </SidebarProvider>
   );
 }
