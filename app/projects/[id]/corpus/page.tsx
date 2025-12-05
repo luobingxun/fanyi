@@ -135,11 +135,22 @@ export default function CorpusPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">语料管理</h2>
-        <div className="flex flex-wrap gap-2">
-           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+    <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+      {/* Top Toolbar */}
+      <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 border-b border-gray-100 gap-4">
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="搜索键名..."
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch(e)}
+          />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               导入 Excel
            </Button>
@@ -151,70 +162,68 @@ export default function CorpusPage() {
                 onChange={handleFileUpload} 
            />
            
-           <Button variant="outline" onClick={handleExport}>
+           <Button variant="outline" size="sm" onClick={handleExport}>
                <Download className="mr-2 h-4 w-4" /> 导出
            </Button>
 
            {selectedIds.size > 0 && (
-               <Button variant="destructive" onClick={handleDelete}>
+               <Button variant="destructive" size="sm" onClick={handleDelete}>
                    <Trash2 className="mr-2 h-4 w-4" /> 删除 ({selectedIds.size})
                </Button>
            )}
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="搜索键名..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8" onKeyDown={e => e.key === 'Enter' && handleSearch(e)} />
-          </div>
-          <Button variant="secondary" onClick={fetchCorpus}>搜索</Button>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50/50 text-gray-500 uppercase font-medium border-b border-gray-100">
+                <tr>
+                    <th className="p-4 w-12 pl-6">
+                        <input type="checkbox" 
+                            checked={selectedIds.size === corpus.length && corpus.length > 0} 
+                            onChange={toggleAll}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                    </th>
+                    <th className="p-4 font-medium">键名 (Source)</th>
+                    {projectLanguages.map(lang => (
+                        <th key={lang} className="p-4 font-medium">{lang}</th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                    <tr><td colSpan={projectLanguages.length + 2} className="p-4 text-center text-gray-500 h-32">加载中...</td></tr>
+                ) : corpus.length === 0 ? (
+                    <tr><td colSpan={projectLanguages.length + 2} className="p-4 text-center text-gray-500 h-32">暂无语料数据</td></tr>
+                ) : (
+                    corpus.map(t => (
+                        <tr key={t._id} className="hover:bg-gray-50/50 transition-colors group">
+                            <td className="p-4 pl-6">
+                                <input type="checkbox" 
+                                    checked={selectedIds.has(t._id)} 
+                                    onChange={() => toggleSelection(t._id)}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                            </td>
+                            <td className="p-4 font-medium text-gray-900">{t.key}</td>
+                            {projectLanguages.map(lang => (
+                                <td key={lang} className="p-4 max-w-[200px] truncate text-gray-500" title={t.data[lang]}>
+                                    {t.data[lang] || '-'}
+                                </td>
+                            ))}
+                        </tr>
+                    ))
+                )}
+            </tbody>
+        </table>
       </div>
 
-      <div className="rounded-md border">
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 text-muted-foreground uppercase font-medium">
-                    <tr>
-                        <th className="p-4 w-10">
-                            <input type="checkbox" 
-                                checked={selectedIds.size === corpus.length && corpus.length > 0} 
-                                onChange={toggleAll}
-                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                        </th>
-                        <th className="p-4">键名 (Source)</th>
-                        {projectLanguages.map(lang => (
-                            <th key={lang} className="p-4">{lang}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody className="divide-y">
-                    {loading ? (
-                        <tr><td colSpan={projectLanguages.length + 2} className="p-4 text-center">加载中...</td></tr>
-                    ) : corpus.length === 0 ? (
-                        <tr><td colSpan={projectLanguages.length + 2} className="p-4 text-center text-muted-foreground">暂无语料数据</td></tr>
-                    ) : (
-                        corpus.map(t => (
-                            <tr key={t._id} className="hover:bg-muted/50">
-                                <td className="p-4">
-                                    <input type="checkbox" 
-                                        checked={selectedIds.has(t._id)} 
-                                        onChange={() => toggleSelection(t._id)}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                </td>
-                                <td className="p-4 font-medium">{t.key}</td>
-                                {projectLanguages.map(lang => (
-                                    <td key={lang} className="p-4 max-w-[200px] truncate" title={t.data[lang]}>
-                                        {t.data[lang] || '-'}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+      {/* Footer Pagination */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+        <div className="text-sm text-gray-500">
+          共 {corpus.length} 条记录
         </div>
       </div>
     </div>

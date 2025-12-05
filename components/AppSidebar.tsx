@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
   Globe,
   BookOpen,
   Settings,
@@ -134,6 +133,22 @@ export function AppSidebar() {
                 className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')}
               />
               {!isCollapsed && <span>语料管理</span>}
+            </Link>
+            <Link
+              href={`/projects/${projectId}/tasks`}
+              className={cn(
+                'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
+                isCollapsed ? 'justify-center' : 'space-x-3',
+                pathname.includes(`/projects/${projectId}/tasks`)
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
+              )}
+              title={isCollapsed ? '翻译任务' : ''}
+            >
+              <BookOpen
+                className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')}
+              />
+              {!isCollapsed && <span>翻译任务</span>}
             </Link>
 
           </div>

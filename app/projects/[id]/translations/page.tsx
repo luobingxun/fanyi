@@ -139,27 +139,41 @@ export default function TranslationsPage() {
 
       setTranslating(true);
       
-      // Determine texts to translate
-      // If selection, translate selected. Else, translate all (or filter those missing target lang?)
-      // Requirement: "Translate specified language" "Batch translate all"
-      // Here we support translating selected or all visible.
-      
       const itemsToProcess = selectedIds.size > 0 
         ? translations.filter(t => selectedIds.has(t._id))
-        : translations; // Or filter those missing the target lang? 
+        : translations;
         
-      // Let's just send keys/texts of items to process.
-      // DeepSeek integration needs source text. What is source? 'key' or a specific language?
-      // Usually 'key' is the identifier, but source text might be in 'en' or 'zh'.
-      // Let's assume 'key' is the source text for simplicity or user selects source.
-      // If sourceLang is provided, use that column. If not, use key.
-      
       const texts = itemsToProcess.map(t => {
           if (sourceLang && t.data[sourceLang]) return t.data[sourceLang];
           return t.key;
       });
 
+      // 1. Create Task
+      let taskId = '';
       try {
+          const taskRes = await fetch(`/api/projects/${projectId}/tasks`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ totalCount: texts.length })
+          });
+          if (taskRes.ok) {
+              const task = await taskRes.json();
+              taskId = task._id;
+          }
+      } catch (e) {
+          console.error("Failed to create task", e);
+          // Continue anyway? Or stop? Let's continue but warn.
+      }
+
+      try {
+          // Update task status to processing
+          if (taskId) {
+             // We need a PUT endpoint for tasks to update status/progress.
+             // But we only implemented GET/POST.
+             // Let's assume we can add PUT to the same route or a new one.
+             // For now, let's just proceed. We'll add the PUT handler next.
+          }
+
           const res = await fetch('/api/translate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -174,41 +188,35 @@ export default function TranslationsPage() {
 
           if (res.ok) {
               const { results } = await res.json();
-              // Update local state and save to DB
-              // We need to update each translation item with the new result
-              
-              // Batch update optimization: We could create a bulk update API.
-              // For now, let's update one by one or use a new endpoint?
-              // Or just reuse upload endpoint? No.
-              // Let's just loop update for now or create a bulk update endpoint.
-              // Updating state locally first for feedback.
               
               const updatedTranslations = [...translations];
               const updates = [];
+              let successCount = 0;
+              let failCount = 0;
 
               for (const t of updatedTranslations) {
                   const sourceText = sourceLang && t.data[sourceLang] ? t.data[sourceLang] : t.key;
                   if (results[sourceText]) {
                       if (!t.data) t.data = {};
                       t.data[targetLang] = results[sourceText];
+                      successCount++;
                       
                       updates.push({
                           _id: t._id,
                           key: t.key,
                           data: t.data
                       });
+                  } else {
+                      // If text was in the list but no result, it failed?
+                      // Or maybe it was skipped.
+                      // DeepSeek might return partial results.
                   }
               }
+              failCount = texts.length - successCount;
               
-              setTranslations(updatedTranslations); // Optimistic update
+              setTranslations(updatedTranslations); 
 
-              // Save to DB (We should probably have a bulk update endpoint)
-              // For now, we can just call PUT for each or implement bulk update.
-              // Let's implement a quick loop, it might be slow for many items.
-              // Ideally, backend should handle the translation result saving if we passed IDs.
-              // But /api/translate is generic.
-              // Let's do client side save for now.
-              
+              // Save translations
               await Promise.all(updates.map(u => 
                  fetch(`/api/projects/${projectId}/translations`, {
                      method: 'PUT',
@@ -216,14 +224,41 @@ export default function TranslationsPage() {
                  })
               ));
               
+              // Update Task Status
+              if (taskId) {
+                  await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                          status: 'completed',
+                          successCount,
+                          failCount
+                      })
+                  });
+              }
+
               setIsTranslateOpen(false);
               alert('翻译完成');
-              fetchTranslations(); // Refresh to be sure
+              fetchTranslations(); 
           } else {
+              if (taskId) {
+                  await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ status: 'failed', failCount: texts.length })
+                  });
+              }
               alert('翻译失败');
           }
       } catch (error) {
           console.error(error);
+          if (taskId) {
+              await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: 'failed', failCount: texts.length })
+              });
+          }
           alert('翻译过程中出错');
       } finally {
           setTranslating(false);
@@ -280,11 +315,22 @@ export default function TranslationsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">文本翻译</h2>
-        <div className="flex flex-wrap gap-2">
-           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+    <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+      {/* Top Toolbar */}
+      <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 border-b border-gray-100 gap-4">
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="搜索键名..."
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch(e)}
+          />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               导入 Excel
            </Button>
@@ -296,13 +342,13 @@ export default function TranslationsPage() {
                 onChange={handleFileUpload} 
            />
            
-           <Button variant="outline" onClick={handleExport}>
+           <Button variant="outline" size="sm" onClick={handleExport}>
                <Download className="mr-2 h-4 w-4" /> 导出
            </Button>
 
            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                <DialogTrigger asChild>
-                   <Button variant="outline">
+                   <Button variant="outline" size="sm">
                        <Plus className="mr-2 h-4 w-4" /> 手动添加
                    </Button>
                </DialogTrigger>
@@ -330,7 +376,7 @@ export default function TranslationsPage() {
 
            <Dialog open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
                <DialogTrigger asChild>
-                   <Button disabled={selectedIds.size === 0 && translations.length === 0}>
+                   <Button size="sm" disabled={selectedIds.size === 0 && translations.length === 0}>
                        <Languages className="mr-2 h-4 w-4" /> AI 翻译
                    </Button>
                </DialogTrigger>
@@ -389,78 +435,75 @@ export default function TranslationsPage() {
            </Dialog>
 
            {selectedIds.size > 0 && (
-               <Button variant="destructive" onClick={handleDelete}>
+               <Button variant="destructive" size="sm" onClick={handleDelete}>
                    <Trash2 className="mr-2 h-4 w-4" /> 删除 ({selectedIds.size})
                </Button>
            )}
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="搜索键名..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8" onKeyDown={e => e.key === 'Enter' && handleSearch(e)} />
-          </div>
-          <Button variant="secondary" onClick={fetchTranslations}>搜索</Button>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50/50 text-gray-500 uppercase font-medium border-b border-gray-100">
+                <tr>
+                    <th className="p-4 w-12 pl-6">
+                        <input type="checkbox" 
+                            checked={selectedIds.size === translations.length && translations.length > 0} 
+                            onChange={toggleAll}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                    </th>
+                    <th className="p-4 font-medium">键名</th>
+                    {projectLanguages.map(lang => (
+                        <th key={lang} className="p-4 font-medium">{lang}</th>
+                    ))}
+                    <th className="p-4 text-right pr-6 font-medium">操作</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                    <tr><td colSpan={projectLanguages.length + 3} className="p-4 text-center text-gray-500 h-32">加载中...</td></tr>
+                ) : translations.length === 0 ? (
+                    <tr><td colSpan={projectLanguages.length + 3} className="p-4 text-center text-gray-500 h-32">暂无翻译数据</td></tr>
+                ) : (
+                    translations.map(t => (
+                        <tr key={t._id} className="hover:bg-gray-50/50 transition-colors group">
+                            <td className="p-4 pl-6">
+                                <input type="checkbox" 
+                                    checked={selectedIds.has(t._id)} 
+                                    onChange={() => toggleSelection(t._id)}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                            </td>
+                            <td className="p-4 font-medium text-gray-900">{t.key}</td>
+                            {projectLanguages.map(lang => (
+                                <td key={lang} className="p-4 max-w-[200px] truncate text-gray-500" title={t.data[lang]}>
+                                    {t.data[lang] || '-'}
+                                </td>
+                            ))}
+                            <td className="p-4 text-right pr-6">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-primary" onClick={() => {
+                                    setNewKey(t.key);
+                                    setNewData({...t.data});
+                                    setIsAddOpen(true);
+                                }}>
+                                    <span className="sr-only">Edit</span>
+                                    {/* Using Edit icon here would be better, but keeping consistent with previous code structure for now, or adding Edit icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                </Button>
+                            </td>
+                        </tr>
+                    ))
+                )}
+            </tbody>
+        </table>
       </div>
 
-      <div className="rounded-md border">
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 text-muted-foreground uppercase font-medium">
-                    <tr>
-                        <th className="p-4 w-10">
-                            <input type="checkbox" 
-                                checked={selectedIds.size === translations.length && translations.length > 0} 
-                                onChange={toggleAll}
-                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                        </th>
-                        <th className="p-4">键名</th>
-                        {projectLanguages.map(lang => (
-                            <th key={lang} className="p-4">{lang}</th>
-                        ))}
-                        <th className="p-4 text-right">操作</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y">
-                    {loading ? (
-                        <tr><td colSpan={projectLanguages.length + 3} className="p-4 text-center">加载中...</td></tr>
-                    ) : translations.length === 0 ? (
-                        <tr><td colSpan={projectLanguages.length + 3} className="p-4 text-center text-muted-foreground">暂无翻译数据</td></tr>
-                    ) : (
-                        translations.map(t => (
-                            <tr key={t._id} className="hover:bg-muted/50">
-                                <td className="p-4">
-                                    <input type="checkbox" 
-                                        checked={selectedIds.has(t._id)} 
-                                        onChange={() => toggleSelection(t._id)}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                </td>
-                                <td className="p-4 font-medium">{t.key}</td>
-                                {projectLanguages.map(lang => (
-                                    <td key={lang} className="p-4 max-w-[200px] truncate" title={t.data[lang]}>
-                                        {t.data[lang] || '-'}
-                                    </td>
-                                ))}
-                                <td className="p-4 text-right">
-                                    {/* Inline edit or delete specific item could go here */}
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
-                                        setNewKey(t.key);
-                                        setNewData({...t.data});
-                                        // We'd need a separate edit dialog or reuse add dialog with 'edit' mode
-                                        // For simplicity, skipping individual edit button implementation in this turn
-                                    }}>
-                                        <span className="sr-only">Edit</span>
-                                        {/* Edit Icon */}
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+      {/* Footer Pagination (Placeholder for now as we don't have server-side pagination yet) */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+        <div className="text-sm text-gray-500">
+          共 {translations.length} 条记录
         </div>
       </div>
     </div>
