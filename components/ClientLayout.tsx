@@ -18,19 +18,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return <main className="min-h-screen">{children}</main>;
   }
 
-  const marginClass = isCollapsed ? 'ml-24' : 'ml-[15rem]';
+  const marginClass = isCollapsed ? 'ml-20' : 'ml-56';
 
   return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-      <div
-        className={cn(
-          'flex-1 flex flex-col transition-all duration-300',
-          marginClass
-        )}
-      >
-        <AppHeader />
-        <main className="flex-1 p-8">{children}</main>
+    <div className="flex min-h-screen flex-col">
+      <AppHeader />
+      <div className="flex flex-1">
+        <AppSidebar />
+        <div
+          className={cn(
+            'flex-1 flex flex-col transition-all duration-300',
+            marginClass
+          )}
+        >
+          <main className="flex-1 p-4">{children}</main>
+        </div>
       </div>
     </div>
   );

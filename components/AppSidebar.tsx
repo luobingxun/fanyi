@@ -14,7 +14,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { Button } from './ui/button';
 import { useSidebar } from '@/hooks/useSidebar';
 
 export function AppSidebar() {
@@ -26,7 +25,7 @@ export function AppSidebar() {
   return (
     <div
       className={cn(
-        'h-[calc(100vh-2rem)] m-4 bg-[#1a1a1a] border border-white/10 flex flex-col fixed left-0 top-0 transition-all duration-300 shadow-xl z-50 rounded-2xl',
+        'h-[calc(100vh-6rem)] m-4 bg-[#1a1a1a] border border-white/10 flex flex-col fixed left-0 top-16 transition-all duration-300 shadow-xl z-30 rounded-2xl',
         isCollapsed ? 'w-16' : 'w-52'
       )}
     >
@@ -77,22 +76,7 @@ export function AppSidebar() {
             />
             {!isCollapsed && <span>项目列表</span>}
           </Link>
-          <Link
-            href="/settings"
-            className={cn(
-              'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
-              isCollapsed ? 'justify-center' : 'space-x-3',
-              pathname === '/settings'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-gray-400 hover:bg-white/10 hover:text-white'
-            )}
-            title={isCollapsed ? '全局设置' : ''}
-          >
-            <Settings
-              className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')}
-            />
-            {!isCollapsed && <span>全局设置</span>}
-          </Link>
+
         </div>
 
         {/* Project Section */}
@@ -104,20 +88,20 @@ export function AppSidebar() {
               </h2>
             )}
             <Link
-              href={`/projects/${projectId}`}
+              href={`/projects/${projectId}/settings`}
               className={cn(
                 'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
                 isCollapsed ? 'justify-center' : 'space-x-3',
-                pathname === `/projects/${projectId}`
+                pathname.includes(`/projects/${projectId}/settings`)
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-gray-400 hover:bg-white/10 hover:text-white'
               )}
-              title={isCollapsed ? '项目概览' : ''}
+              title={isCollapsed ? '项目配置' : ''}
             >
-              <LayoutDashboard
+              <Settings
                 className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')}
               />
-              {!isCollapsed && <span>项目概览</span>}
+              {!isCollapsed && <span>项目配置</span>}
             </Link>
             <Link
               href={`/projects/${projectId}/translations`}
@@ -151,40 +135,23 @@ export function AppSidebar() {
               />
               {!isCollapsed && <span>语料管理</span>}
             </Link>
-            <Link
-              href={`/projects/${projectId}/settings`}
-              className={cn(
-                'flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
-                isCollapsed ? 'justify-center' : 'space-x-3',
-                pathname.includes(`/projects/${projectId}/settings`)
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
-              )}
-              title={isCollapsed ? '项目设置' : ''}
-            >
-              <Settings
-                className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')}
-              />
-              {!isCollapsed && <span>项目设置</span>}
-            </Link>
+
           </div>
         )}
       </nav>
 
-      {/* Footer - Logout */}
       <div className="p-3 border-t border-white/10">
-        <Button
-          variant="ghost"
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className={cn(
-            'w-full text-gray-400 hover:text-white hover:bg-white/10 transition-all',
-            isCollapsed ? 'justify-center px-2' : 'justify-start'
+            'flex items-center w-full p-2 rounded-lg hover:bg-white/10 transition-all group text-gray-400 hover:text-white',
+            isCollapsed ? 'justify-center' : 'space-x-3'
           )}
-          onClick={() => signOut()}
           title={isCollapsed ? '退出登录' : ''}
         >
-          <LogOut className={cn('h-5 w-5', !isCollapsed && 'mr-2')} />
+          <LogOut className={cn('w-5 h-5', isCollapsed ? '' : 'flex-shrink-0')} />
           {!isCollapsed && <span>退出登录</span>}
-        </Button>
+        </button>
       </div>
     </div>
   );

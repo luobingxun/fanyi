@@ -2,8 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Bell, Search, LogOut, KeyRound } from 'lucide-react';
-import { Input } from './ui/input';
+import { Bell, LogOut, KeyRound, Languages } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -33,77 +32,74 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-16 border-b bg-white flex items-center justify-between px-6 sticky top-0 z-40 shadow">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="搜索项目、翻译..."
-            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white"
-          />
+    <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-md">
+      <div className="flex h-16 items-center justify-between px-6">
+        {/* Left Section - Branding */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Languages className="h-5 w-5" />
+          </div>
+          <span className="text-lg font-semibold text-gray-900">Fanyi</span>
         </div>
-      </div>
 
-      {/* Right Section - Notifications & User */}
-      <div className="flex items-center gap-4">
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-gray-600" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </Button>
+        {/* Right Section - Notifications & User */}
+        <div className="flex items-center gap-2">
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="relative hover:bg-black/5 rounded-full">
+            <Bell className="h-5 w-5 text-gray-600" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          </Button>
 
-        {/* User Dropdown Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 pl-4 border-l focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg transition-all hover:bg-gray-50 pr-2 py-1">
-              {/* Avatar */}
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-md cursor-pointer hover:shadow-lg transition-shadow">
-                {getInitials(username)}
-              </div>
+          {/* User Dropdown Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
+                {/* Avatar */}
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-sm">
+                  {getInitials(username)}
+                </div>
 
-              {/* User Name */}
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-semibold text-gray-900">
-                  {username}
-                </p>
-                <p className="text-xs text-gray-500">管理员</p>
-              </div>
-            </button>
-          </DropdownMenuTrigger>
+                {/* User Name */}
+                <div className="hidden md:block text-left pr-2">
+                  <p className="text-sm font-medium text-gray-700 leading-none">
+                    {username}
+                  </p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{username}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {session?.user?.email || '管理员账户'}
-                </p>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 mt-2">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{username}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {session?.user?.email || '管理员账户'}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              onClick={handleChangePassword}
-              className="cursor-pointer"
-            >
-              <KeyRound className="mr-2 h-4 w-4" />
-              <span>修改密码</span>
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleChangePassword}
+                className="cursor-pointer"
+              >
+                <KeyRound className="mr-2 h-4 w-4" />
+                <span>修改密码</span>
+              </DropdownMenuItem>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="cursor-pointer text-red-600 focus:text-red-600"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>退出登录</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>退出登录</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

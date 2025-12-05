@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import connectToDatabase from '@/lib/db';
 import Project from '@/lib/models/Project';
 
@@ -41,7 +42,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const project = await Project.create({ name, description });
+    const apiKey = randomBytes(32).toString('hex');
+    const project = await Project.create({ name, description, apiKey });
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     if ((error as { code?: number }).code === 11000) {

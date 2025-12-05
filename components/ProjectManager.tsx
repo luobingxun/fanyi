@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Plus,
   Trash2,
-  Folder,
   Search,
   Edit,
   Eye,
@@ -289,7 +288,7 @@ export default function ProjectManager() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <Link
-                      href={`/projects/${project._id}`}
+                      href={`/projects/${project._id}/settings`}
                       className="flex items-center group-hover:text-primary transition-colors"
                     >
                       <div>
@@ -313,14 +312,8 @@ export default function ProjectManager() {
                   </TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-400 hover:text-primary"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Link href={`/projects/${project._id}`}>
+
+                      <Link href={`/projects/${project._id}/settings`}>
                         <Button
                           variant="ghost"
                           size="icon"
