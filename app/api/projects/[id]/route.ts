@@ -8,7 +8,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   await connectToDatabase();
   const { id } = await params;
   const project = await Project.findById(id);
-  console.log("GET Project:", project);
   if (!project) {
     return NextResponse.json({ error: '项目未找到' }, { status: 404 });
   }
@@ -43,9 +42,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (body.deepseekApiEndpoint !== undefined) updateData.deepseekApiEndpoint = body.deepseekApiEndpoint;
     if (body.deepseekApiSecret !== undefined) updateData.deepseekApiSecret = body.deepseekApiSecret;
     if (body.systemPrompt !== undefined) updateData.systemPrompt = body.systemPrompt;
-
-    console.log("Updating project:", id);
-    console.log("Update data:", updateData);
 
     const project = await Project.findByIdAndUpdate(id, updateData, { new: true });
     return NextResponse.json(project);

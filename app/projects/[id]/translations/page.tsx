@@ -330,7 +330,7 @@ export default function TranslationsPage() {
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
-           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               导入 Excel
            </Button>
@@ -342,13 +342,13 @@ export default function TranslationsPage() {
                 onChange={handleFileUpload} 
            />
            
-           <Button variant="outline" size="sm" onClick={handleExport}>
+           <Button variant="outline" onClick={handleExport}>
                <Download className="mr-2 h-4 w-4" /> 导出
            </Button>
 
            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                <DialogTrigger asChild>
-                   <Button variant="outline" size="sm">
+                   <Button variant="outline">
                        <Plus className="mr-2 h-4 w-4" /> 手动添加
                    </Button>
                </DialogTrigger>
@@ -376,7 +376,7 @@ export default function TranslationsPage() {
 
            <Dialog open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
                <DialogTrigger asChild>
-                   <Button size="sm" disabled={selectedIds.size === 0 && translations.length === 0}>
+                   <Button disabled={selectedIds.size === 0 && translations.length === 0}>
                        <Languages className="mr-2 h-4 w-4" /> AI 翻译
                    </Button>
                </DialogTrigger>
@@ -435,7 +435,7 @@ export default function TranslationsPage() {
            </Dialog>
 
            {selectedIds.size > 0 && (
-               <Button variant="destructive" size="sm" onClick={handleDelete}>
+               <Button variant="destructive" onClick={handleDelete}>
                    <Trash2 className="mr-2 h-4 w-4" /> 删除 ({selectedIds.size})
                </Button>
            )}
